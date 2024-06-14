@@ -11,7 +11,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Arr;
 
 class CardController extends Controller
@@ -229,7 +229,8 @@ class CardController extends Controller
     protected function validator_view(array $data)
     {
         return Validator::make($data, [
-            'usr_id'    =>   ['required']
+            'usr_id'    =>   ['required'],
+            'deck_id'    =>   ['required'],
         ]);
     }
 
@@ -238,7 +239,8 @@ class CardController extends Controller
     {
         return Validator::make($data, [
             'usr_id'      =>   ['required'],
-            'surah_id'    =>   ['required']
+            'surah_id'    =>   ['required'],
+            'deck_id'     =>   ['required'],
         ]);
     }
 
@@ -533,8 +535,9 @@ class CardController extends Controller
 
     public function delete_all_cards(Request $request)
     {
-        $data = $request->only('usr_id');
+        $data = $request->only('usr_id', 'deck_id');
         $usr_id = $data['usr_id'];
+        $deck_id = request('deck_id');
 
         $response = $this->validator_view($data);
 
@@ -544,24 +547,24 @@ class CardController extends Controller
             $err_str = implode(" ", $errors);
             $res = ['result' => $result, 'response' => $err_str];
             return response()->json($res, 200);
-        } else {
-            $delCards = Card::where('usr_id', '=', $usr_id)->delete();
-            if ($delCards) {
-                $res = ['result' => 'success', 'response' => "All Cards Deleted Successfully."];
-                return response()->json($res, 200);
-            } else {
-                $res = ['result' => 'failed', 'response' => "Cards Cannot be Deleted."];
-                return response()->json($res, 200);
-            }
         }
+
+        $delCards = Card::where('usr_id', '=', $usr_id)->where('deck_id', $deck_id)->delete();
+        if (!$delCards) {
+            $res = ['result' => 'failed', 'response' => "Cards Cannot be Deleted."];
+            return response()->json($res, 200);
+        }
+        $res = ['result' => 'success', 'response' => "All Cards Deleted Successfully."];
+        return response()->json($res, 200);
     }
 
     public function delete_surah_cards(Request $request)
     {
-        $data = $request->only('usr_id', 'surah_id');
+        $data = $request->only('usr_id', 'surah_id', 'deck_id');
         $response = $this->validator_getSurahCards($data);
         $usr_id = $data['usr_id'];
         $surah_id = $data['surah_id'];
+        $deck_id = $data['deck_id'];
 
         if ($response->fails()) {
             $result = 'failed';
@@ -569,16 +572,14 @@ class CardController extends Controller
             $err_str = implode(" ", $errors);
             $res = ['result' => $result, 'response' => $err_str];
             return response()->json($res, 200);
-        } else {
-            $delCards = Card::where('usr_id', '=', $usr_id)->where('surah_id', '=', $surah_id)->delete();
-            if ($delCards) {
-                $res = ['result' => 'success', 'response' => "All Cards Deleted Successfully."];
-                return response()->json($res, 200);
-            } else {
-                $res = ['result' => 'failed', 'response' => "Cards Cannot be Deleted."];
-                return response()->json($res, 200);
-            }
         }
+        $delCards = Card::where('usr_id', '=', $usr_id)->where('deck_id', $deck_id)->where('surah_id', '=', $surah_id)->delete();
+        if (!$delCards) {
+            $res = ['result' => 'failed', 'response' => "Cards Cannot be Deleted."];
+            return response()->json($res, 200);
+        }
+        $res = ['result' => 'success', 'response' => "All Cards Deleted Successfully."];
+        return response()->json($res, 200);
     }
 
     public function delete_user_cards(Request $request)
