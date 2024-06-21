@@ -13,7 +13,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
-use DB;
+use Illuminate\Support\Facades\DB;
 
 class OfflineFeatureController extends Controller
 {
@@ -198,9 +198,9 @@ class OfflineFeatureController extends Controller
                     $all_cards =  Card::where('usr_id', $da->usr_id)
                         // ->where('surah_id', $da->surah_id)
                         // ->where('verse_id', $da->verse_id)
-                        ->select('card_id', 'surah_id', 'verse_id')->get();
+                        ->select('card_id', 'surah_id', 'verse_id', 'deck_id')->get();
                 }
-                $card_status = $this->isCardIsInArray($all_cards, $da->surah_id, $da->verse_id);
+                $card_status = $this->isCardIsInArray($all_cards, $da->surah_id, $da->verse_id, $da->deck_id);
                 if ($card_status) {
                     // if (($da->card_id) != NULL) {
                     //     $card_id = $da->card_id;
@@ -249,11 +249,11 @@ class OfflineFeatureController extends Controller
         return $time_elapsed_secs;
     }
 
-    public function isCardIsInArray($all_cards, $surah_id, $verse_id)
+    public function isCardIsInArray($all_cards, $surah_id, $verse_id, $deck_id = 1)
     {
         $cards = null;
         foreach ($all_cards as $card) {
-            if ($card->surah_id == $surah_id && $card->verse_id == $verse_id) {
+            if ($card->surah_id == $surah_id && $card->verse_id == $verse_id && $card->deck_id == $deck_id) {
                 $cards = $card;
                 break;
             }
