@@ -49,7 +49,7 @@ Route::get('please-login', function () {
     $response['response'] = "please login first";
     $response['result'] = 'failed';
 
-    return json_encode($response);
+    return json_encode($response); 
 })->name('please-login');
 
 Route::post('card/getCardsWithSurah', [App\Http\Controllers\API\CardController::class, 'get_cards_with_surah']);
