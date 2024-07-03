@@ -167,9 +167,13 @@ class OfflineFeatureController extends Controller
                 }
                 $tmp['request_json'] = json_encode($logsArray);
                 // $result = DB::statement("INSERT INTO offline_logs('request_json','current_datetime','status','created_at', 'updated_at') VALUES " . implode('+', $logsArray));
-                OfflineLog::create($tmp);
-                $result = 'sucess';
                 $message = 'Data inserted sucessfully';
+                try {
+                    $offline_logs = OfflineLog::create($tmp);
+                } catch (\Exception $e) {
+                    $message = $e->getMessage();
+                }
+                $result = 'sucess';
                 $res = ['result' => $result, 'response' => $message];
             } else {
                 $result = 'failed';

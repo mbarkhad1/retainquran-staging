@@ -81,3 +81,8 @@ Route::post('get-audio-size-by-reciter', [App\Http\Controllers\API\ReciterContro
 // RECENT PAGE ROUTES
 Route::post('last-view', [App\Http\Controllers\API\LastViewController::class, 'createLastView']);
 Route::get('last-view', [App\Http\Controllers\API\LastViewController::class, 'getLastView']);
+
+// Test Route update content after every code push to verify the push has made it to the server
+Route::get('testing-route', function () {
+    return 'v1';
+});

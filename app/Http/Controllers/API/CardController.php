@@ -86,7 +86,10 @@ class CardController extends Controller
     {
         $time_start = microtime(true);
         $data = $request->only('usr_id');
-        $response = $this->validator_view($data);
+        // $response = $this->validator_view($data);
+        $response = Validator::make($data, [
+            'usr_id'    =>   ['required'],
+        ]);
         $responseCards = array();
 
         if ($response->fails()) {
@@ -95,40 +98,39 @@ class CardController extends Controller
             $err_str = implode(" ", $errors);
             $res = ['result' => $result, 'response' => $err_str];
             return response()->json($res, 200);
-        } else {
-            $usr_id = $data['usr_id'];
-            $time_start_query = microtime(true);
-            $cards = DB::table('tbl_cards')
-                ->select('*')
-                ->where('usr_id', '=', $usr_id)
-                ->get()->toArray();
-            $response = array();
-
-            foreach ($cards as $card) {
-
-                if ($card->due_at == null) {
-                    $card->status = 'New';
-                } else {
-                    $card->status = 'Due';
-                }
-                if ($card->due_at == "2030-11-01 00:00:00") {
-                    $card->due_at = NULL;
-                }
-                $response[] = $card;
-            }
-            $time_end_query = microtime(true);
-            // foreach ($cards as $card) {
-            //     if ($card->due_at == "2030-11-01 00:00:00") {
-            //         $card->due_at = NULL;
-            //     }
-            //     $responseCards[] = $card;
-            // }
-            $time_end = microtime(true);
-            $execution_time = ($time_end - $time_start);
-            $queryTime = ($time_end_query - $time_start_query);
-            $res = ['result' => 'success', 'response' => $response, 'executionTime' => $execution_time, 'queryTime' => $queryTime];
-            return response()->json($res, 200);
         }
+        $usr_id = $data['usr_id'];
+        $time_start_query = microtime(true);
+        $cards = DB::table('tbl_cards')
+            ->select('*')
+            ->where('usr_id', '=', $usr_id)
+            ->get()->toArray();
+        $response = array();
+
+        foreach ($cards as $card) {
+
+            if ($card->due_at == null) {
+                $card->status = 'New';
+            } else {
+                $card->status = 'Due';
+            }
+            if ($card->due_at == "2030-11-01 00:00:00") {
+                $card->due_at = NULL;
+            }
+            $response[] = $card;
+        }
+        $time_end_query = microtime(true);
+        // foreach ($cards as $card) {
+        //     if ($card->due_at == "2030-11-01 00:00:00") {
+        //         $card->due_at = NULL;
+        //     }
+        //     $responseCards[] = $card;
+        // }
+        $time_end = microtime(true);
+        $execution_time = ($time_end - $time_start);
+        $queryTime = ($time_end_query - $time_start_query);
+        $res = ['result' => 'success', 'response' => $response, 'executionTime' => $execution_time, 'queryTime' => $queryTime];
+        return response()->json($res, 200);
     }
 
     public function get_cards_with_surah(Request $request)
