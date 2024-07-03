@@ -18,6 +18,7 @@ class LanguageController extends Controller
         {
             $response['response'] = $all;
             $response['result'] = 'success';
+            $response['message'] = 'updated message testing';
             return response()->json($response);
 
         }
