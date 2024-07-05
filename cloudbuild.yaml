@@ -11,7 +11,7 @@
    args:
    - 'run'
    - 'deploy'
-   - 'retainquranapp'
+   - 'retainquranapp-staging'
    - '--image'
    - 'gcr.io/retain-quran/github.com/mbarkhad1/retainquran-staging:$COMMIT_SHA'
    - '--region'
