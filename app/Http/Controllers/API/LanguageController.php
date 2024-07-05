@@ -16,7 +16,7 @@ class LanguageController extends Controller
         if (isset($all)) {
             $response['response'] = $all;
             $response['result'] = 'success';
-            $response['message'] = 'updated message testing';
+            $response['message'] = 'updated message testing updated';
             return response()->json($response);
         } else {
             $response['response'] = "There is no record in Table";
