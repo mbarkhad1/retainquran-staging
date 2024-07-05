@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\LanguageController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -83,6 +84,4 @@ Route::post('last-view', [App\Http\Controllers\API\LastViewController::class, 'c
 Route::get('last-view', [App\Http\Controllers\API\LastViewController::class, 'getLastView']);
 
 // Test Route update content after every code push to verify the push has made it to the server
-Route::get('testing-route', function () {
-    return 'v1';
-});
+Route::get('testing-route', [LanguageController::class, 'testingRoute']);

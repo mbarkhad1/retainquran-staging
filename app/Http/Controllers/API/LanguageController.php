@@ -12,22 +12,23 @@ class LanguageController extends Controller
 {
     public function getAllLangauges()
     {
-
         $all = Language::all();
-        if(isset($all))
-        {
+        if (isset($all)) {
             $response['response'] = $all;
             $response['result'] = 'success';
             $response['message'] = 'updated message testing';
             return response()->json($response);
-
-        }
-        else
-        {
+        } else {
             $response['response'] = "There is no record in Table";
             $response['result'] = 'failed';
             return response()->json($response);
         }
-        
+    }
+
+    public function testingRoute()
+    {
+        $response['result'] = 'success';
+        $response['message'] = 'updated message testing';
+        return response()->json($response);
     }
 }
