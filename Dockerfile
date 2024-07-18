@@ -43,4 +43,6 @@ RUN chmod -R 777 /rq/storage
 
 RUN chmod -R 777 /rq/bootstrap
 
+COPY /tmp/storage/*.key /rq/storage/
+
 CMD sh /rq/docker/startup.sh
