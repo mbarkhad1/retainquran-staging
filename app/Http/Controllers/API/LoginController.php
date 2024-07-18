@@ -91,6 +91,7 @@ class LoginController extends Controller
                 return response()->json($response, 200);
             }
         } catch (\Exception $e) {
+            logger($e);
             $response = [];
             $response['response'] = $e->getMessage();
             $response['result'] = "failed";
