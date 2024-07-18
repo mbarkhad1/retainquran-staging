@@ -37,6 +37,8 @@ RUN cd /rq && \
 
 CMD php artisan passport:install
 
+CMD php artisan passport:keys
+
 RUN chown -R www-data: /rq
 
 RUN chmod -R 777 /rq/storage
