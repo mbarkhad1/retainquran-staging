@@ -35,12 +35,14 @@ RUN cd /rq && \
 RUN cd /rq && \
     /usr/local/bin/composer update
 
-CMD php artisan passport:install
+RUN php artisan passport:install
 
 RUN chown -R www-data: /rq
 
 RUN chmod -R 777 /rq/storage
 
 RUN chmod -R 777 /rq/bootstrap
+
+COPY /tmp/storage/*.key /rq/storage/
 
 CMD sh /rq/docker/startup.sh
