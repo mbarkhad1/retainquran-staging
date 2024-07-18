@@ -8,12 +8,12 @@ use App\Providers\RouteServiceProvider;
 use Google_Client;
 use Illuminate\Http\Request;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use App\Models\User_setting;
 use Validator;
 use Socialite;
-use DB;
+use Illuminate\Support\Facades\DB;
 use Firebase\JWT\JWT;
 
 class LoginController extends Controller
@@ -65,9 +65,10 @@ class LoginController extends Controller
             $response['response'] = $err_str;
             $response['result'] = "failed";
             return response()->json($response, 200);
-        } else {
+        }
 
-            $credentials = $request->only('email', 'password');
+        $credentials = $request->only('email', 'password');
+        try {
             if (Auth::attempt($credentials)) {
 
                 // return redirect()->intended();
@@ -89,7 +90,13 @@ class LoginController extends Controller
                 $response['result'] = "failed";
                 return response()->json($response, 200);
             }
+        } catch (\Exception $e) {
+            $response = [];
+            $response['response'] = $e->getMessage();
+            $response['result'] = "failed";
+            return response()->json($response, 200);
         }
+
 
 
 
@@ -140,11 +147,11 @@ class LoginController extends Controller
             if ($provider == 'google') {
                 try {
                     $driver = Socialite::driver($provider); //->stateless()->user();
-                    
+
                     // $client = new Google_Client();
                     // $client->setClientId(env('GOOGLE_CLIENT_ID'));
                     // $client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
-                    
+
                     $client = new Google_Client(['client_id' => "698659440308-6prb0tkmeb5o277ae669981omev5bkge.apps.googleusercontent.com",]);  // Specify the CLIENT_ID of the app that accesses the backend
                     $payload = $client->verifyIdToken($token);
                 } catch (\Exception $e) {
