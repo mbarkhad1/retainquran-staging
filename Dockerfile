@@ -35,7 +35,7 @@ RUN cd /rq && \
 RUN cd /rq && \
     /usr/local/bin/composer update
 
-RUN php artisan passport:install
+CMD php artisan passport:install
 
 RUN chown -R www-data: /rq
 
