@@ -43,6 +43,6 @@ RUN chmod -R 777 /rq/storage
 
 RUN chmod -R 777 /rq/bootstrap
 
-COPY /tmp/storage/*.key /rq/storage/
+CMD php artisan passport:keys
 
 CMD sh /rq/docker/startup.sh
