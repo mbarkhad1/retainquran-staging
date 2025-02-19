@@ -209,4 +209,27 @@ class UserSettingController extends Controller
             return response()->json($res, 200);
         }
     }
+
+    public function save_mushaf_id()
+    {
+        $data = request()->all();
+        $validData = Validator::make($data, [
+            'usr_id'    => ['required'],
+            'mushaf_id' => ['required'],
+        ]);
+
+        if ($validData->fails()) {
+            $result = 'failed';
+            $errors = $validData->errors()->all();
+            $err_str = implode(" ", $errors);
+            $response = ['result' => $result, 'response' => $err_str];
+            return response()->json($response, 200);
+        }
+
+        $update = User_setting::where('usr_id', $data['usr_id'])
+            ->update(['mushaf_id' => $data['mushaf_id']]);
+
+        $response = ['result' => 'success', 'response' => 'Mushaf ID Updated'];
+        return response()->json($response, 200);
+    }
 }

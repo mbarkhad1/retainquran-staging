@@ -70,6 +70,7 @@ Route::post('setting/DefaultNotificationUpdate', [App\Http\Controllers\API\UserS
 Route::post('setting/DefaultViewUpdate', [App\Http\Controllers\API\UserSettingController::class, 'update_default_view']);
 Route::post('setting/DefaultTranslatorUpdate', [App\Http\Controllers\API\UserSettingController::class, 'update_default_translator']);
 Route::post('setting/GetSettings', [App\Http\Controllers\API\UserSettingController::class, 'get_settings']);
+Route::post('setting/set-mushaf-id', [App\Http\Controllers\API\UserSettingController::class, 'save_mushaf_id']);
 
 Route::post('statistics/getColors', [App\Http\Controllers\API\StatsController::class, 'get_colors']);
 Route::get('card/get-weekly-stats', [App\Http\Controllers\API\StatsController::class, 'GetWeeklyStats']);
