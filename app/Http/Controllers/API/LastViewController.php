@@ -56,6 +56,7 @@ class LastViewController extends Controller
                     'surah_number' => $request->surah_number,
                     'is_juz' => $request->is_juz,
                     'juz_number' => $request->juz_number,
+                    'verse_id' => $request->verse_id
                 ]);
                 return response([
                     'result' => "success",
@@ -86,6 +87,7 @@ class LastViewController extends Controller
                 'surah_number' => $request->surah_number,
                 'is_juz' => $request->is_juz,
                 'juz_number' => $request->juz_number,
+                'verse_id' => $request->verse_id,
             ]);
 
             return response([
