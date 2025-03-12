@@ -1,10 +1,10 @@
  steps:
  # Build the container image
  - name: 'gcr.io/cloud-builders/docker'
-   args: ['build', '-t', 'gcr.io/retain-quran/github.com/mbarkhad1/retainquran-staging:$COMMIT_SHA', '.']
+   args: ['build', '-t', 'us-central1-docker.pkg.dev/retain-quran/retain-quran-staging/retainquran-staging:$COMMIT_SHA', '.']
  # Push the container image to Container Registry
  - name: 'gcr.io/cloud-builders/docker'
-   args: ['push', 'gcr.io/retain-quran/github.com/mbarkhad1/retainquran-staging:$COMMIT_SHA']
+   args: ['push', 'us-central1-docker.pkg.dev/retain-quran/retain-quran-staging/retainquran-staging:$COMMIT_SHA']
  # Deploy container image to Cloud Run
  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
    entrypoint: gcloud
@@ -13,10 +13,10 @@
    - 'deploy'
    - 'retainquranapp-staging'
    - '--image'
-   - 'gcr.io/retain-quran/github.com/mbarkhad1/retainquran-staging:$COMMIT_SHA'
+   - 'us-central1-docker.pkg.dev/retain-quran/retain-quran-staging/retainquran-staging:$COMMIT_SHA'
    - '--region'
    - 'us-central1'
  images:
- - 'gcr.io/retain-quran/github.com/mbarkhad1/retainquran-staging:$COMMIT_SHA'
+ - 'us-central1-docker.pkg.dev/retain-quran/retain-quran-staging/retainquran-staging:$COMMIT_SHA'
  options:
   logging: CLOUD_LOGGING_ONLY
