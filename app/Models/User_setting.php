@@ -15,5 +15,5 @@ class User_setting extends Model
 
     protected $primaryKey = 'us_id';
 
-    protected $fillable = array('usr_id', 'reciter_id', 'trans_id', 'rtype_id', 'translation_id','language_id', 'is_notify', 'mushaf_id');
+    protected $fillable = array('usr_id', 'reciter_id', 'trans_id', 'rtype_id', 'translation_id', 'language_id', 'is_notify', 'mushaf_id', 'tafseer_id');
 }

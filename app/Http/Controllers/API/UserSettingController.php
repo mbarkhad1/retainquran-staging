@@ -232,4 +232,48 @@ class UserSettingController extends Controller
         $response = ['result' => 'success', 'response' => 'Mushaf ID Updated'];
         return response()->json($response, 200);
     }
+
+    public function saveTafseerSetting()
+    {
+        $validator = Validator::make(request()->all(), [
+            'tafseer_id' => ['required']
+        ]);
+
+        if ($validator->fails()) {
+            $result = 'failed';
+            $errors = $validator->errors()->all();
+            $err_str = implode(" ", $errors);
+            return response([
+                'result' => $result,
+                'response' => $err_str
+            ]);
+        }
+
+        $userId = request('usr_id');
+        $userId = auth()->user()->id;
+        $tafseer_id = request('tafseer_id');
+        try {
+
+            $userSetting = User_setting::where('usr_id', $userId)->first();
+            if (!$userSetting) {
+                throw new \Exception('Settings not found');
+            }
+            $userSetting->update([
+                'tafseer_id' => $tafseer_id,
+            ]);
+
+            return response([
+                'success' => false,
+                'data' => $userSetting,
+                'message' => null,
+            ]);
+        } catch (\Exception $e) {
+            logger()->error($e);
+            return response([
+                'success' => false,
+                'data' => null,
+                'message' => $e->getMessage(),
+            ]);
+        }
+    }
 }
