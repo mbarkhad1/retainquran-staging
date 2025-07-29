@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use App\Models\Language;
+use App\Models\Tafseer;
 use Illuminate\Http\Request;
 
 
@@ -22,6 +23,25 @@ class LanguageController extends Controller
             $response['response'] = "There is no record in Table";
             $response['result'] = 'failed';
             return response()->json($response);
+        }
+    }
+
+    public function getTafseers()
+    {
+        try {
+            $tafseers = Tafseer::all();
+            return response([
+                'success' => true,
+                'data' => $tafseers,
+                'message' => null,
+            ]);
+        } catch (\Exception $e) {
+            logger()->error($e);
+            return response([
+                'success' => false,
+                'data' => [],
+                'message' => $e->getMessage(),
+            ]);
         }
     }
 

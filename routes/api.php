@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\LanguageController;
+use App\Http\Controllers\API\UserSettingController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -85,4 +86,6 @@ Route::post('last-view', [App\Http\Controllers\API\LastViewController::class, 'c
 Route::get('last-view', [App\Http\Controllers\API\LastViewController::class, 'getLastView']);
 
 // Test Route update content after every code push to verify the push has made it to the server
+Route::get('tafseer', [LanguageController::class, 'getTafseers']);
+Route::post('setting/set-tafseer-id', [UserSettingController::class, 'saveTafseerSetting'])->middleware('auth:api');
 Route::get('testing-route', [LanguageController::class, 'testingRoute']);
