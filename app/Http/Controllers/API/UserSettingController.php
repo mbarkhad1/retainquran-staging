@@ -263,7 +263,7 @@ class UserSettingController extends Controller
             ]);
 
             return response([
-                'success' => false,
+                'success' => true,
                 'data' => $userSetting,
                 'message' => null,
             ]);
