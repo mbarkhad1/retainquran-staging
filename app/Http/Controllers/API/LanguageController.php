@@ -32,8 +32,8 @@ class LanguageController extends Controller
             $tafseers = Tafseer::all();
             return response([
                 'success' => true,
-                'data' => $tafseers,
                 'message' => null,
+                'data' => $tafseers,
             ]);
         } catch (\Exception $e) {
             logger()->error($e);
