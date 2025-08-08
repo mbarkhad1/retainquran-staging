@@ -74,10 +74,14 @@ class LoginController extends Controller
                 // return redirect()->intended();
 
 
-                $login = User::where('email', $credentials['email'])->update(['is_login'  => 1]);
+                // $login = User::where('email', $credentials['email'])->update(['is_login'  => 1]);
+                // $user = Auth::User();
+                // DB::table('oauth_access_tokens')->where('user_id', $user->id)->delete();
+                // $this->deleteTokens('simple_login', $user);
                 $user = Auth::User();
-                DB::table('oauth_access_tokens')->where('user_id', $user->id)->delete();
                 $this->deleteTokens('simple_login', $user);
+                $login = User::where('email', $credentials['email'])->update(['is_login'  => 1]);
+                DB::table('oauth_access_tokens')->where('user_id', $user->id)->delete();
                 $response = [];
                 $response['token'] = $user->createToken('api-application')->accessToken;
                 $response['response'] = $user;
