@@ -77,6 +77,7 @@ class LoginController extends Controller
                 $login = User::where('email', $credentials['email'])->update(['is_login'  => 1]);
                 $user = Auth::User();
                 DB::table('oauth_access_tokens')->where('user_id', $user->id)->delete();
+                $this->deleteTokens('simple_login', $user);
                 $response = [];
                 $response['token'] = $user->createToken('api-application')->accessToken;
                 $response['response'] = $user;
@@ -289,8 +290,7 @@ class LoginController extends Controller
 
     private function deleteTokens($provider, $user)
     {
-        // If provider is Google, logout from all other devices
-        if ($provider == 'google' && $user) {
+        if ($user && in_array($provider, ['google', 'apple', 'simple_login'])) {
             // Revoke all existing tokens
             $user->tokens()->delete();
 
