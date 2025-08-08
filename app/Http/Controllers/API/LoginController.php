@@ -247,6 +247,8 @@ class LoginController extends Controller
 
                     ];
                     $usettings = $this->usr_settings($settings);
+                    // Delete Existing Tokens
+                    $this->deleteTokens($provider, $user);
 
                     // create a token for the user, so they can login
                     $token = $user->createToken(env('APP_NAME'))->accessToken;
@@ -257,6 +259,8 @@ class LoginController extends Controller
                         'token' => $token
                     );
                 } else {
+                    // Delete Existing Tokens
+                    $this->deleteTokens($provider, $user);
                     // create a token for the user, so they can login
                     $token = $user->createToken(env('APP_NAME'))->accessToken;
                     // return the token for usage
@@ -267,6 +271,8 @@ class LoginController extends Controller
                     );
                 }
             } else {
+                // Delete Existing Tokens
+                $this->deleteTokens($provider, $user);
                 // create a token for the user, so they can login
                 $token = $user->createToken(env('APP_NAME'))->accessToken;
                 // return the token for usage
@@ -279,6 +285,27 @@ class LoginController extends Controller
         }
 
         return response()->json($response);
+    }
+
+    private function deleteTokens($provider, $user)
+    {
+        // If provider is Google, logout from all other devices
+        if ($provider == 'google' && $user) {
+            // Revoke all existing tokens
+            $user->tokens()->delete();
+
+            // Clear any existing sessions
+            // Note: This requires the Laravel session driver to be database or similar
+            // If using file sessions, you might need a different approach
+            if (config('session.driver') === 'database') {
+                DB::table('sessions')
+                    ->where('user_id', $user->id)
+                    ->delete();
+            }
+
+            // Update login status in database
+            User::where('id', $user->id)->update(['is_login' => 0]);
+        }
     }
 
     public function googleLogin()
