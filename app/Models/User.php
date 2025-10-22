@@ -23,7 +23,10 @@ class User extends Authenticatable
         'password',
         'provider',
         'provider_id',
-        'is_login'
+        'is_login',
+        'stripe_customer_id',
+        'paypal_payer_id',
+        'flutterwave_customer_id'
     ];
 
     /**

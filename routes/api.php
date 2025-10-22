@@ -89,3 +89,47 @@ Route::get('last-view', [App\Http\Controllers\API\LastViewController::class, 'ge
 Route::get('tafseer', [LanguageController::class, 'getTafseers']);
 Route::post('setting/set-tafseer-id', [UserSettingController::class, 'saveTafseerSetting'])->middleware('auth:api');
 Route::get('testing-route', [LanguageController::class, 'testingRoute']);
+
+// Stripe payments
+Route::post('payments/stripe/create-intent', [App\Http\Controllers\API\StripeController::class, 'createIntent']);
+Route::post('payments/stripe/webhook', [App\Http\Controllers\API\StripeController::class, 'webhook']);
+
+// Saved cards and subscriptions (auth required)
+Route::middleware('auth:api')->group(function () {
+	Route::post('payments/stripe/ensure-customer', [App\Http\Controllers\API\StripeController::class, 'ensureCustomer']);
+	Route::post('payments/stripe/create-setup-intent', [App\Http\Controllers\API\StripeController::class, 'createSetupIntent']);
+	Route::get('payments/stripe/payment-methods', [App\Http\Controllers\API\StripeController::class, 'listSavedCards']);
+	Route::post('payments/stripe/charge-saved', [App\Http\Controllers\API\StripeController::class, 'chargeWithSavedCard']);
+	Route::post('payments/stripe/subscribe', [App\Http\Controllers\API\StripeController::class, 'createSubscription']);
+});
+
+// PayPal payments
+Route::post('payments/paypal/create-order', [App\Http\Controllers\API\PaypalController::class, 'createOrder']);
+Route::post('payments/paypal/capture/{orderId}', [App\Http\Controllers\API\PaypalController::class, 'captureOrder']);
+Route::post('payments/paypal/webhook', [App\Http\Controllers\API\PaypalController::class, 'webhook']);
+
+Route::middleware('auth:api')->group(function () {
+	Route::get('payments/paypal/ensure-payer', [App\Http\Controllers\API\PaypalController::class, 'ensurePayer']);
+});
+
+// Flutterwave payments
+Route::post('payments/flutterwave/create-payment', [App\Http\Controllers\API\FlutterwaveController::class, 'createPayment']);
+Route::post('payments/flutterwave/verify-payment', [App\Http\Controllers\API\FlutterwaveController::class, 'verifyPayment']);
+Route::post('payments/flutterwave/webhook', [App\Http\Controllers\API\FlutterwaveController::class, 'webhook']);
+Route::get('payments/flutterwave/callback', [App\Http\Controllers\API\FlutterwaveController::class, 'flutterwaveCallback'])
+    ->name('flutterwave.callback');
+Route::middleware('auth:api')->group(function () {
+	Route::post('payments/flutterwave/ensure-customer', [App\Http\Controllers\API\FlutterwaveController::class, 'ensureCustomer']);
+	Route::post('payments/flutterwave/save-card', [App\Http\Controllers\API\FlutterwaveController::class, 'saveCard']);
+	Route::post('payments/flutterwave/charge-saved-card', [App\Http\Controllers\API\FlutterwaveController::class, 'chargeSavedCard']);
+	Route::post('payments/flutterwave/create-subscription', [App\Http\Controllers\API\FlutterwaveController::class, 'createSubscription']);
+});
+
+// Donations module - unified payment interface
+Route::middleware('auth:api')->group(function () {
+	Route::post('donations/initiate', [App\Http\Controllers\API\DonationsController::class, 'initiatePayment']);
+	Route::post('donations/one-time', [App\Http\Controllers\API\DonationsController::class, 'processOneTimePayment']);
+	Route::post('donations/monthly', [App\Http\Controllers\API\DonationsController::class, 'setupMonthlyDonation']);
+	Route::get('donations/history', [App\Http\Controllers\API\DonationsController::class, 'getDonationHistory']);
+	Route::post('donations/cancel-monthly', [App\Http\Controllers\API\DonationsController::class, 'cancelMonthlyDonation']);
+});

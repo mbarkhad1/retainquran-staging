@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Payments\PaymentGatewayInterface;
+use App\Payments\StripePaymentGateway;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -13,7 +15,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->app->bind(PaymentGatewayInterface::class, function () {
+            return new StripePaymentGateway();
+        });
     }
 
     /**

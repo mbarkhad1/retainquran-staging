@@ -94,6 +94,158 @@ To install with [Docker](https://www.docker.com) see the 'Dockerfile' at the roo
 
 **_Note_** : You can quickly set the database information and other variables in this file and have the application fully working.
 
+### Payments (Stripe)
+
+Add to your `.env`:
+
+```
+STRIPE_KEY=pk_test_...
+STRIPE_SECRET=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_CURRENCY=usd
+```
+
+Server endpoints:
+
+- `POST /api/payments/stripe/create-intent` — body: `{ "amount": 500, "currency": "usd", "metadata": {"donation_for": "general"} }`. Returns `{ client_secret, payment_intent }`.
+- `POST /api/payments/stripe/webhook` — configure in Stripe Dashboard; uses `STRIPE_WEBHOOK_SECRET` to verify.
+
+Relevant files:
+
+- `config/stripe.php`
+- `app/Payments/PaymentGatewayInterface.php`
+- `app/Payments/StripePaymentGateway.php`
+- `app/Http/Controllers/API/StripeController.php`
+- `routes/api.php`
+
+Saved cards:
+
+- Auth user calls `POST /api/payments/stripe/ensure-customer` to create/link Stripe customer and stores `stripe_customer_id` on `users`.
+- Then call `POST /api/payments/stripe/create-setup-intent` to get a `client_secret` for collecting card details on the client. Confirm the setup intent on the client using Stripe.js to save the card.
+- List saved cards with `GET /api/payments/stripe/payment-methods`.
+- Charge a saved card with `POST /api/payments/stripe/charge-saved` body: `{ "amount": 500, "payment_method_id": "pm_...", "currency": "usd", "metadata": {"donation_for":"general"} }`.
+
+Recurring donations:
+
+- Create a recurring Price in Stripe (e.g., monthly). Use its `price_...` id.
+- Subscribe user with `POST /api/payments/stripe/subscribe` body: `{ "price_id": "price_...", "payment_method_id": "pm_..." }`.
+
+### Payments (PayPal)
+
+Environment variables in `.env`:
+
+```
+PAYPAL_MODE=sandbox
+PAYPAL_CLIENT_ID=...
+PAYPAL_CLIENT_SECRET=...
+PAYPAL_WEBHOOK_ID=...
+PAYPAL_CURRENCY=USD
+```
+
+Endpoints:
+
+- `POST /api/payments/paypal/create-order` — body: `{ "amount": 500, "currency": "USD", "metadata": {"donation_for": "general"} }`. Returns order for client approval.
+- `POST /api/payments/paypal/capture/{orderId}` — Captures approved order; store `paypal_payer_id` from result to `users.paypal_payer_id` if present.
+- `POST /api/payments/paypal/webhook` — Configure in PayPal dashboard; verification uses `PAYPAL_WEBHOOK_ID`.
+- `GET /api/payments/paypal/ensure-payer` (auth) — returns stored `paypal_payer_id`.
+
+Notes:
+
+- PayPal "saved card" is managed by vaulting via the approval flow; a follow-up can attach billing agreements or use subscriptions with Plans/Products for monthly donations. Create a monthly Plan in PayPal, have client approve it, then track subscription status via webhooks.
+
+### Payments (Flutterwave)
+
+Environment variables in `.env`:
+
+```
+FLUTTERWAVE_PUBLIC_KEY=FLWPUBK_TEST-...
+FLUTTERWAVE_SECRET_KEY=FLWSECK_TEST-...
+FLUTTERWAVE_ENCRYPTION_KEY=...
+FLUTTERWAVE_WEBHOOK_SECRET=...
+FLUTTERWAVE_CURRENCY=NGN
+FLUTTERWAVE_ENVIRONMENT=staging
+```
+
+Endpoints:
+
+- `POST /api/payments/flutterwave/create-payment` — body: `{ "amount": 500, "currency": "NGN", "email": "user@example.com", "customer_name": "John Doe", "description": "Donation" }`. Returns payment link for user to complete.
+- `POST /api/payments/flutterwave/verify-payment` — body: `{ "transaction_id": "..." }`. Verify payment status.
+- `POST /api/payments/flutterwave/webhook` — Configure in Flutterwave dashboard; verification uses `verif-hash` header.
+- `POST /api/payments/flutterwave/ensure-customer` (auth) — creates/links Flutterwave customer.
+- `POST /api/payments/flutterwave/save-card` (auth) — body: `{ "card_number": "...", "cvv": "...", "expiry_month": "12", "expiry_year": "25" }`. Returns card token.
+- `POST /api/payments/flutterwave/charge-saved-card` (auth) — body: `{ "amount": 500, "card_token": "...", "description": "Donation" }`. Charge saved card.
+- `POST /api/payments/flutterwave/create-subscription` (auth) — body: `{ "amount": 500, "plan_name": "Monthly Donation", "interval": "monthly" }`. Create recurring subscription.
+
+Notes:
+
+- Flutterwave supports multiple payment methods (cards, bank transfers, mobile money).
+- Saved cards use tokenization for secure storage.
+- Subscriptions are managed through Flutterwave's subscription API.
+- Webhook verification uses the `verif-hash` header for security.
+
+### Donations Module
+
+Unified interface for all payment methods with donation tracking.
+
+Environment variables (same as above for each payment provider).
+
+Endpoints:
+
+- `POST /api/donations/initiate` (auth) — Unified payment initiation
+  - body: `{ "amount": 50, "payment_type": "stripe|paypal|flutterwave", "payment_frequency": "one_time|monthly", "currency": "USD", "description": "Donation", "metadata": {} }`
+  - Returns payment details for completion
+
+- `POST /api/donations/one-time` (auth) — Process one-time donation
+  - body: `{ "amount": 50, "payment_type": "stripe", "currency": "USD", "description": "Donation" }`
+
+- `POST /api/donations/monthly` (auth) — Setup monthly recurring donation
+  - body: `{ "amount": 25, "payment_type": "stripe", "currency": "USD", "description": "Monthly Donation" }`
+
+- `GET /api/donations/history` (auth) — Get user's donation history
+
+- `POST /api/donations/cancel-monthly` (auth) — Cancel monthly donation
+  - body: `{ "donation_id": 123 }`
+
+Features:
+
+- **Unified Interface**: Single endpoint for all payment providers
+- **Donation Tracking**: Complete history and status management
+- **Recurring Payments**: Monthly donation setup and management
+- **Multi-Currency**: Support for USD, NGN, and other currencies
+- **Metadata Support**: Custom data storage for each donation
+- **Status Management**: Pending, completed, failed, cancelled states
+
+Usage Examples:
+
+```javascript
+// One-time donation with Stripe
+POST /api/donations/one-time
+{
+  "amount": 100,
+  "payment_type": "stripe",
+  "currency": "USD",
+  "description": "Quran App Donation"
+}
+
+// Monthly donation with PayPal
+POST /api/donations/monthly
+{
+  "amount": 25,
+  "payment_type": "paypal",
+  "currency": "USD",
+  "description": "Monthly Support"
+}
+
+// Flutterwave donation
+POST /api/donations/initiate
+{
+  "amount": 50,
+  "payment_type": "flutterwave",
+  "payment_frequency": "one_time",
+  "currency": "NGN"
+}
+```
+
 ---
 
 # Testing API
