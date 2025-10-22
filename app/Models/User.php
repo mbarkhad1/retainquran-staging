@@ -53,4 +53,9 @@ class User extends Authenticatable
         $link = $token;
         $this->notify(new \App\Notifications\MailResetPasswordNotification($link));
     }
+
+    public function donations()
+    {
+        return $this->hasMany(\App\Models\Donation::class, 'user_id', 'id');
+    }
 }
