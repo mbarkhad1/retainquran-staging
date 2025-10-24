@@ -19,6 +19,18 @@ class PaypalPaymentGateway
 		$clientId = (string) config('paypal.client_id');
 		$clientSecret = (string) config('paypal.client_secret');
 		$mode = (string) config('paypal.mode', 'sandbox');
+		
+		// Validate credentials
+		if (empty($clientId) || empty($clientSecret)) {
+			throw new \Exception('PayPal credentials are not configured. Please set PAYPAL_CLIENT_ID and PAYPAL_CLIENT_SECRET in your .env file.');
+		}
+		
+		\Log::info('PayPal Configuration', [
+			'mode' => $mode,
+			'client_id' => $clientId ? 'Set' : 'Missing',
+			'client_secret' => $clientSecret ? 'Set' : 'Missing'
+		]);
+		
 		$environment = $mode === 'live'
 			? new ProductionEnvironment($clientId, $clientSecret)
 			: new SandboxEnvironment($clientId, $clientSecret);
@@ -39,8 +51,37 @@ class PaypalPaymentGateway
 				'custom_id' => $metadata['custom_id'] ?? null,
 			]],
 		];
-		$response = $this->client->execute($request);
-		return json_decode(json_encode($response->result), true);
+		
+		try {
+			\Log::info('Creating PayPal order', [
+				'amount' => $amount,
+				'currency' => $currency,
+				'metadata' => $metadata
+			]);
+			
+			$response = $this->client->execute($request);
+			return json_decode(json_encode($response->result), true);
+		} catch (\PayPalHttp\HttpException $ex) {
+			\Log::error('PayPal API Error', [
+				'status_code' => $ex->statusCode,
+				'headers' => $ex->headers,
+				'message' => $ex->getMessage(),
+				'data' => $ex->getData()
+			]);
+			
+			// Handle specific Content-Type header error
+			if (strpos($ex->getMessage(), 'Content-Type header') !== false) {
+				throw new \Exception('PayPal API configuration error. Please verify your PayPal credentials and network connectivity.');
+			}
+			
+			throw new \Exception('PayPal payment creation failed: ' . $ex->getMessage());
+		} catch (\Exception $ex) {
+			\Log::error('PayPal General Error', [
+				'message' => $ex->getMessage(),
+				'data' => method_exists($ex, 'getData') ? $ex->getData() : null
+			]);
+			throw new \Exception('PayPal payment creation failed: ' . $ex->getMessage());
+		}
 	}
 
 	public function captureOrder(string $orderId): array
