@@ -23,7 +23,10 @@ class User extends Authenticatable
         'password',
         'provider',
         'provider_id',
-        'is_login'
+        'is_login',
+        'stripe_customer_id',
+        'paypal_payer_id',
+        'flutterwave_customer_id'
     ];
 
     /**
@@ -49,5 +52,10 @@ class User extends Authenticatable
     {
         $link = $token;
         $this->notify(new \App\Notifications\MailResetPasswordNotification($link));
+    }
+
+    public function donations()
+    {
+        return $this->hasMany(\App\Models\Donation::class, 'user_id', 'id');
     }
 }
