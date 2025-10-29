@@ -35,15 +35,7 @@ RUN cd /rq && \
 RUN cd /rq && \
     /usr/local/bin/composer update
 
-# Add Artisan optimization commands
-RUN cd /rq && \
-    php artisan config:clear && \
-    php artisan cache:clear && \
-    php artisan route:clear && \
-    php artisan view:clear && \
-    php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan optimize
+CMD php artisan passport:install
 
 RUN chown -R www-data: /rq
 
