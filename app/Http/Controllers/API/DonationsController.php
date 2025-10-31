@@ -24,7 +24,7 @@ class DonationsController extends Controller
 	{
 		$validator = Validator::make($request->all(), [
 			'amount' => 'required|numeric|min:1',
-			'payment_type' => 'required|string|in:stripe,paypal,flutterwave',
+			'payment_type' => 'required|string|in:stripe,paypal,flutterwave,xendit',
 			'payment_frequency' => 'required|string|in:one_time,monthly',
 			'currency' => 'sometimes|string',
 			'description' => 'sometimes|string',

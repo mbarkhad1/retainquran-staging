@@ -133,3 +133,12 @@ Route::middleware('auth:api')->group(function () {
 	Route::get('donations/history', [App\Http\Controllers\API\DonationsController::class, 'getDonationHistory']);
 	Route::post('donations/cancel-monthly', [App\Http\Controllers\API\DonationsController::class, 'cancelMonthlyDonation']);
 });
+
+
+// Xendit Payments
+Route::post('/payments/xendit/webhook', [PaymentController::class, 'xenditWebhook']);
+Route::prefix('xendit')->group(function () {
+    Route::post('create-invoice', [App\Http\Controllers\API\XenditController::class, 'createInvoice']);
+    Route::post('webhook', [App\Http\Controllers\API\XenditController::class, 'webhook']);
+    Route::get('invoice/{id}', [App\Http\Controllers\API\XenditController::class, 'getInvoice']);
+});
