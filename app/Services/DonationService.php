@@ -8,6 +8,7 @@ use App\Payments\PaymentGatewayInterface;
 use App\Payments\StripePaymentGateway;
 use App\Payments\PaypalPaymentGateway;
 use App\Payments\FlutterwavePaymentGateway;
+use App\Payments\XenditPaymentGateway;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -16,16 +17,18 @@ class DonationService
 	private $stripeGateway;
 	private $paypalGateway;
 	private $flutterwaveGateway;
+	private $xenditGateway;
 
 	public function __construct(
 		StripePaymentGateway $stripeGateway,
 		PaypalPaymentGateway $paypalGateway,
-		FlutterwavePaymentGateway $flutterwaveGateway
+		FlutterwavePaymentGateway $flutterwaveGateway,
+		XenditPaymentGateway $xenditGateway
 	) {
-
 		$this->stripeGateway = $stripeGateway;
 		$this->paypalGateway = $paypalGateway;
 		$this->flutterwaveGateway = $flutterwaveGateway;
+		$this->xenditGateway = $xenditGateway;
 	}
 
 	/**
@@ -40,6 +43,8 @@ class DonationService
 		string $description = 'Donation',
 		array $metadata = []
 	): array {
+		
+		// dd($paymentType);
 		// Create donation record
 		$donation = Donation::create([
 			'user_id' => $user->id,
@@ -51,6 +56,7 @@ class DonationService
 			'metadata' => $metadata,
 			'status' => 'pending',
 		]);
+		// dd($donation);
 
 		// Route to appropriate payment gateway
 		switch ($paymentType) {
@@ -60,6 +66,8 @@ class DonationService
 				return $this->initiatePaypalPayment($donation, $amount, $currency, $description, $metadata);
 			case 'flutterwave':
 				return $this->initiateFlutterwavePayment($donation, $amount, $currency, $description, $metadata);
+			case 'xendit':
+				return $this->initiateXenditPayment($donation, $amount, $currency, $description, $metadata);
 			default:
 				throw new \InvalidArgumentException("Unsupported payment type: {$paymentType}");
 		}
@@ -147,8 +155,6 @@ class DonationService
 				'payment_intent' => $intent,
 			];
 		} else {
-			// For monthly donations, create a price and subscription
-			// This is a simplified version - in production, you'd create prices in Stripe dashboard
 			$intent = $this->stripeGateway->createPaymentIntent($amountInCents, $metadata, $currency);
 			$donation->update(['payment_provider_id' => $intent['id']]);
 
@@ -207,6 +213,39 @@ class DonationService
 	}
 
 	/**
+	 * Initiate Xendit payment
+	 */
+	private function initiateXenditPayment(Donation $donation, float $amount, ?string $currency, string $description, array $metadata): array
+	{
+		$currency = $currency ?? 'IDR'; // Xendit primarily supports IDR, PHP, USD depending on account setup
+		$externalId = 'donation_' . $donation->id . '_' . time();
+
+		$payload = [
+			'external_id' => $externalId,
+			'amount' => (int) $amount,
+			'payer_email' => $donation->user->email,
+			'description' => $description,
+			'success_url' => config('app.url') . '/payment/success',
+			'cancel_url' => config('app.url') . '/payment/cancel',
+			'metadata' => $metadata,
+			'currency' => $currency,
+		];
+
+		$response = $this->xenditGateway->initiateDonationPayment($payload);
+
+		$donation->update([
+			'payment_provider_id' => $response['id'] ?? null,
+		]);
+
+		return [
+			'donation_id' => $donation->id,
+			'payment_type' => 'xendit',
+			'checkout_url' => $response['invoice_url'] ?? ($response['payment_url'] ?? null),
+			'response' => $response,
+		];
+	}
+
+	/**
 	 * Cancel subscription with payment provider
 	 */
 	private function cancelSubscriptionWithProvider(Donation $donation): void
@@ -221,6 +260,9 @@ class DonationService
 					break;
 				case 'flutterwave':
 					// Cancel Flutterwave subscription
+					break;
+				case 'xendit':
+					// Cancel Xendit recurring (if implemented)
 					break;
 			}
 		} catch (\Exception $e) {
@@ -244,6 +286,8 @@ class DonationService
 				return 'USD';
 			case 'flutterwave':
 				return 'NGN';
+			case 'xendit':
+				return 'IDR';
 			default:
 				return 'USD';
 		}
@@ -264,33 +308,37 @@ class DonationService
 			case 'flutterwave':
 				$this->handleFlutterwaveWebhook($webhookData);
 				break;
+			case 'xendit':
+				$this->handleXenditWebhook($webhookData);
+				break;
 		}
 	}
 
-	/**
-	 * Handle Stripe webhook
-	 */
 	private function handleStripeWebhook(array $webhookData): void
 	{
-		// Implementation for Stripe webhook handling
 		Log::info('Stripe webhook received', $webhookData);
 	}
 
-	/**
-	 * Handle PayPal webhook
-	 */
 	private function handlePaypalWebhook(array $webhookData): void
 	{
-		// Implementation for PayPal webhook handling
 		Log::info('PayPal webhook received', $webhookData);
 	}
 
-	/**
-	 * Handle Flutterwave webhook
-	 */
 	private function handleFlutterwaveWebhook(array $webhookData): void
 	{
-		// Implementation for Flutterwave webhook handling
 		Log::info('Flutterwave webhook received', $webhookData);
+	}
+
+	private function handleXenditWebhook(array $webhookData): void
+	{
+		Log::info('Xendit webhook received', $webhookData);
+
+		if (isset($webhookData['status']) && $webhookData['status'] === 'PAID') {
+			$donation = Donation::where('payment_provider_id', $webhookData['id'] ?? null)->first();
+			if ($donation) {
+				$donation->update(['status' => 'completed']);
+				Log::info('Donation marked as completed via Xendit webhook', ['donation_id' => $donation->id]);
+			}
+		}
 	}
 }
